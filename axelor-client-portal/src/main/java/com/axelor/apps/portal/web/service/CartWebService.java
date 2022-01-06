@@ -61,9 +61,9 @@ public class CartWebService extends AbstractWebService {
   public PortalRestResponse createCart(Map<String, Object> values) throws AxelorException {
 
     Pair<SaleOrder, Boolean> saleOrder = Beans.get(SaleOrderPortalService.class).checkCart(values);
-
     Map<String, Object> data =
         ResponseGeneratorFactory.of(SaleOrder.class.getName()).generate(saleOrder.getLeft());
+
     data.put("itemsChanged", saleOrder.getRight());
     data.put("paymentModes", getPaymentModes());
 

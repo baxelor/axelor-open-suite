@@ -91,7 +91,7 @@ public class PaymentCardWebService extends AbstractWebService {
 
     List<Card> cards = new ArrayList<>();
     try {
-      Beans.get(CardService.class).createCard(partner, cardDetails);
+      Beans.get(CardService.class).createCard(partner, cardDetails, null);
       if (ObjectUtils.notEmpty(partner.getCardList())) {
         cards = partner.getCardList();
       }
@@ -166,11 +166,41 @@ public class PaymentCardWebService extends AbstractWebService {
   public void remove(@PathParam("cardId") String cardId) throws StripeException, AxelorException {
 
     CardRepository cardRepo = Beans.get(CardRepository.class);
-    System.out.println(cardId);
     Card card = cardRepo.findByStripeId(cardId);
-    System.out.println(card);
     Beans.get(JpaSecurity.class).check(AccessType.WRITE, Card.class, card.getId());
 
     Beans.get(CardRepository.class).remove(card);
+  }
+
+  @POST
+  @Path("/{id}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public PortalRestResponse update(@PathParam("id") Long id, Map<String, Object> data)
+      throws AxelorException, StripeException {
+    Beans.get(JpaSecurity.class).check(AccessType.WRITE, Card.class, id);
+    String expiry = data.get("expiry").toString();
+    Partner partner = getPartner();
+    Map<String, Object> cardDetails = new HashMap<>();
+    cardDetails.put("number", data.get("cardNumber"));
+    cardDetails.put("name", data.get("name"));
+    cardDetails.put("exp_month", expiry.substring(0, 2));
+    cardDetails.put("exp_year", expiry.substring(2));
+    cardDetails.put("cvc", data.get("cvc"));
+    cardDetails.put("isDefault", false);
+    List<Card> cards = new ArrayList<>();
+    try {
+      Beans.get(CardService.class).createCard(partner, cardDetails, id);
+      if (ObjectUtils.notEmpty(partner.getCardList())) {
+        cards = partner.getCardList();
+      }
+    } catch (Exception e) {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, I18n.get(e.getMessage()));
+    }
+    PortalRestResponse response = new PortalRestResponse();
+    response.setOffset(0);
+    response.setTotal(cards.size());
+    return response.setData(cards).success();
   }
 }

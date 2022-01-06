@@ -366,6 +366,7 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
     List<Map<String, Object>> cartItems = (List<Map<String, Object>>) values.get("cart");
     Company company = userService.getUserActiveCompany();
     SaleOrder order = createOrder(company, cartItems);
+    setAddresses(values, order);
     return order;
   }
 

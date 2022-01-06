@@ -30,9 +30,13 @@ public class CardServiceImpl implements CardService {
 
   @Override
   @Transactional
-  public Card createCard(Partner partner, Map<String, Object> details) {
-
-    Card card = new Card();
+  public Card createCard(Partner partner, Map<String, Object> details, Long id) {
+    Card card = null;
+    if (id == null) {
+      card = new Card();
+    } else {
+      card = cardRepo.find(id);
+    }
     card.setName(details.get("name").toString());
     card.setCardNumber(Long.parseLong(details.get("number").toString()));
     card.setExpiryMonth(Integer.parseInt(details.get("exp_month").toString()));
@@ -41,7 +45,6 @@ public class CardServiceImpl implements CardService {
     card.setIsDefault(Boolean.parseBoolean(details.get("isDefault").toString()));
     card.setPartner(partner);
     cardRepo.save(card);
-
     return card;
   }
 
